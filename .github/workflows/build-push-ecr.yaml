@@ -1,0 +1,72 @@
+name: Build, Scan & Push to ECR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/build-push-ecr.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+
+permissions:
+  id-token: write   # for OIDC -> AWS role assumption (no static AWS keys in CI)
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: ai-incident-assistant
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image
+        working-directory: app
+        run: |
+          docker build -t $ECR_REPOSITORY:${{ github.sha }} .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: "${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1" # fail the build on critical/high CVEs — DevSecOps gate
+
+      - name: Tag & push to ECR
+        if: github.ref == 'refs/heads/main'
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker tag $ECR_REPOSITORY:${{ github.sha }} $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          docker tag $ECR_REPOSITORY:${{ github.sha }} $REGISTRY/$ECR_REPOSITORY:latest
+          docker push $REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          docker push $REGISTRY/$ECR_REPOSITORY:latest
+
+      # ArgoCD Image Updater (if installed) detects the new tag automatically.
+      # Without it, this step bumps values.yaml and lets ArgoCD's git-based
+      # sync pick up the change — pure GitOps, no kubectl/helm from CI.
+      - name: Update Helm values with new image tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sed -i "s/tag: .*/tag: \"${{ github.sha }}\"/" helm/ai-incident-assistant/values.yaml
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git commit -am "ci: bump ai-incident-assistant image to ${{ github.sha }}" || echo "no changes"
+          git push

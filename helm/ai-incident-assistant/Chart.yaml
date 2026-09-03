@@ -1,0 +1,9 @@
+apiVersion: v2
+name: ai-incident-assistant
+description: AI-powered incident triage microservice (FastAPI + Bedrock/Claude)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Sachin M S
+    email: sachinbalagiri1995@gmail.com

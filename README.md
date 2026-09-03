@@ -84,7 +84,7 @@ terraform init
 terraform apply
 
 # 2. Point kubectl at the new cluster
-aws eks update-kubeconfig --region me-central-1 --name ai-incident-assistant-eks
+aws eks update-kubeconfig --region ap-south-1 --name ai-incident-assistant-eks
 
 # 3. Install ArgoCD (one-time, if not already on the cluster)
 kubectl create namespace argocd

@@ -1,0 +1,77 @@
+replicaCount: 2
+
+image:
+  # Overridden per-environment / by ArgoCD Image Updater or CI pipeline
+  repository: "<ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ai-incident-assistant
+  # Populated from terraform output `ai_service_irsa_role_arn` — enables IRSA
+  # so the pod gets short-lived AWS creds with zero static secrets in the cluster.
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::<ACCOUNT_ID>:role/ai-incident-assistant-svc-role"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+env:
+  MODEL_BACKEND: "rule_based" # switch to "bedrock" once IRSA + model access are confirmed
+  AWS_REGION: "ap-south-1"
+  LOG_LEVEL: "INFO"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+ingress:
+  enabled: false
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  host: ai-incident-assistant.example.com
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
