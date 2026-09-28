@@ -73,7 +73,10 @@ resource "aws_iam_policy" "ai_service_permissions" {
         Sid    = "InvokeBedrockModel"
         Effect = "Allow"
         Action = ["bedrock:InvokeModel"]
-        Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/*"
+        Resource = [
+          "arn:aws:bedrock:${var.aws_region}:${data.aws_caller_identity.current.account_id}:inference-profile/global.anthropic.claude-haiku-4-5-20251001-v1:0",
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0"
+        ]
       },
       {
         Sid      = "ReadServiceSecrets"
@@ -89,3 +92,5 @@ resource "aws_iam_role_policy_attachment" "ai_service_attach" {
   role       = module.ai_service_irsa_role.iam_role_name
   policy_arn = aws_iam_policy.ai_service_permissions.arn
 }
+
+data "aws_caller_identity" "current" {}

@@ -3,7 +3,7 @@ replicaCount: 2
 image:
   # Overridden per-environment / by ArgoCD Image Updater or CI pipeline
   repository: "077545916000.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant"
-  tag: "v1"
+  tag: "v2"
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -34,7 +34,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
 
 env:
-  MODEL_BACKEND: "rule_based" # switch to "bedrock" once IRSA + model access are confirmed
+  MODEL_BACKEND: "bedrock"
+  BEDROCK_MODEL_ID: "global.anthropic.claude-haiku-4-5-20251001-v1:0"
   AWS_REGION: "ap-south-1"
   LOG_LEVEL: "INFO"
 
