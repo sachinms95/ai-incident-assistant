@@ -14,6 +14,9 @@ module "eks" {
   # instead of using node-wide credentials — a DevSecOps least-privilege pattern.
   enable_irsa = true
 
+  enable_cluster_creator_admin_permissions = true
+
+
   cluster_addons = {
     coredns                = { most_recent = true }
     kube-proxy              = { most_recent = true }

@@ -8,23 +8,19 @@ metadata:
   # Picked up by argocd-image-updater (if installed) so ArgoCD auto-detects new
   # ECR tags pushed by CI and rolls them out via a Git write-back — no manual PR.
   annotations:
-    argocd-image-updater.argoproj.io/image-list: ai-svc=<ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant
+    argocd-image-updater.argoproj.io/image-list: ai-svc=077545916000.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant
     argocd-image-updater.argoproj.io/ai-svc.update-strategy: latest
     argocd-image-updater.argoproj.io/write-back-method: git
 spec:
   project: default
 
   source:
-    repoURL: https://github.com/sachinms95/truflo-ai-incident-assistant.git
+    repoURL: https://github.com/sachinms95/ai-incident-assistant.git
     targetRevision: main
     path: helm/ai-incident-assistant
     helm:
       valueFiles:
         - values.yaml
-      # ArgoCD Image Updater rewrites this at deploy time to the freshly-built ECR tag
-      parameters:
-        - name: image.tag
-          value: latest
 
   destination:
     server: https://kubernetes.default.svc

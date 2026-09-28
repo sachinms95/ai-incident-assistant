@@ -2,8 +2,8 @@ replicaCount: 2
 
 image:
   # Overridden per-environment / by ArgoCD Image Updater or CI pipeline
-  repository: "<ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant"
-  tag: "latest"
+  repository: "077545916000.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant"
+  tag: "v1"
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -12,7 +12,7 @@ serviceAccount:
   # Populated from terraform output `ai_service_irsa_role_arn` — enables IRSA
   # so the pod gets short-lived AWS creds with zero static secrets in the cluster.
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::<ACCOUNT_ID>:role/ai-incident-assistant-svc-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::077545916000:role/ai-incident-assistant-svc-role"
 
 service:
   type: ClusterIP
