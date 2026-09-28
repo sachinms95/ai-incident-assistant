@@ -3,7 +3,7 @@ replicaCount: 2
 image:
   # Overridden per-environment / by ArgoCD Image Updater or CI pipeline
   repository: "077545916000.dkr.ecr.ap-south-1.amazonaws.com/ai-incident-assistant"
-  tag: "v2"
+  tag: "v3"
   pullPolicy: IfNotPresent
 
 serviceAccount:
