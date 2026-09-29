@@ -12,6 +12,16 @@ summary and a concrete first remediation step — the same triage pattern that
 cut mean incident-response time by 40% at Pay10, packaged as a portfolio
 project.
 
+## Project status
+
+Built and verified end-to-end on AWS (EKS 1.34, ap-south-1) — see [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md) for the full walkthrough and [`docs/SECURITY.md`](docs/SECURITY.md) for the control mapping.
+
+- ✅ Terraform provisions the full platform (VPC, EKS, ECR, IRSA) — 66 resources, verified clean apply/destroy cycle
+- ✅ CI/CD via GitOps: image built, pushed to ECR, deployed by ArgoCD with automated sync/self-heal
+- ✅ Rule-based alert classification tested and working (see `docs/screenshots/`)
+- ⚠️ Bedrock (Claude) mode is implemented and IAM-permissioned but blocked by an AWS account-level restriction (Error 002) pending a support case — the service correctly falls back to rule-based classification and reports this honestly via `backend_used: rule_based_fallback`
+- 💰 Infrastructure is currently torn down (`terraform destroy`) to avoid ongoing cost. Rebuildable from this repo in ~25 minutes.
+
 ## Stack
 
 | Layer | Tool |
